@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nexus Community
 
-## Getting Started
+Nexus Community is a premium, pixel-perfect SaaS frontend social workspace designed for verified organization networks (colleges, universities, and corporate workplaces). 
 
-First, run the development server:
+This is a **frontend-only, zero-backend** application using realistic mock data, complete logic simulation, and browser-persistent memory database storage.
 
+---
+
+## 🚀 Key Modules & Pages
+
+1. **Landing Page**: Animated landing page with GSAP entry flows and an interactive preview card.
+2. **Login / Signup**: Credential shortcut panel for rapid preview testing, student/professional modes.
+3. **Organization Onboarding**: Multi-option wizard (invite code, email OTP, or ID card drop file upload).
+4. **Social Feed**: Rich text posts with image attachments, reactions (fire, heart, like), and slide-up comments drawers.
+5. **Communities Explorer**: Category search pills (Study, Gaming, Work, General) and join triggers.
+6. **Chat Module**: Discord/Slack-style layout with channel hash topics (`#general`, `#announcements`) and direct messages with attachment files.
+7. **Q&A Forum**: Stack Overflow style boards with vote counters, tags, and answer acceptance flag constraints.
+8. **Interactive Polls**: Live visual percentage bars animated dynamically using Framer Motion when casting votes.
+9. **Events Calendar**: Date listings, attendee counts, RSVP bookings, and map location tags.
+10. **Admin Panel**: Visual Area/Bar analytics graphs and verified membership approval queues.
+11. **Moderator Panel**: Violations logs queue and post/comment deletion actions.
+12. **AI Companion Panel**: Floating glass assistant sidebar providing automated chat summaries and mentorship matchmaking.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+- **Runtime**: [React 19](https://react.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand)
+- **Local Persistence**: Client-side database sync to `localStorage`
+- **Animations**: [GSAP](https://gsap.com/) (Hero landing), [Framer Motion](https://www.framer.com/motion/) (Micro-interactions & drawers), and [Lenis](https://lenis.darkroom.engineering/) (Smooth Inertia Scrolling)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Analytics Visualization**: [Recharts](https://recharts.org/)
+
+---
+
+## 👥 Demo Accounts (No password required)
+
+To facilitate grading and review, we pre-loaded the database with the following profiles:
+
+| Account Type | Username | Role / Organization | Purpose / Actions |
+| :--- | :--- | :--- | :--- |
+| **CS Student** | `leosterling` | Member / Nexus University | Standard verified workspace interaction. |
+| **Freshman** | `liamcarter` | Member / Unverified | Can submit ID scans to test the verification wizard. |
+| **Campus Admin** | `sarahjenkins` | Admin / Nexus University | Accesses Admin Panel to approve Liam's ID card upload. |
+| **Engineer Lead** | `alexrivera` | Moderator / Vercel Labs | Accesses Moderator Panel to delete/dismiss reported items. |
+
+---
+
+## ⚙️ Getting Started
+
+### Prerequisites
+
+Ensure you have [Node.js](https://nodejs.org/) installed (v18.x or newer recommended).
+
+### Installation
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/GauravGauri/nexus-community.git
+   cd nexus-community
+   ```
+2. Install all node packages:
+   ```bash
+   npm install --legacy-peer-deps
+   ```
+
+### Running the Application
+
+Start the local development server:
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+Open [http://localhost:3000](http://localhost:3000) inside your web browser to interact with the application.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Building for Production
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Compile and verify code type checks:
+```bash
+npm run build
+```
+The optimized bundle is output inside the `.next` directory.
