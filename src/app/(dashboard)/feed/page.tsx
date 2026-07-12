@@ -73,6 +73,32 @@ function FeedContent() {
         const reactionsB = Object.values(b.reactions).reduce((sum, current) => sum + current.length, 0);
         return (reactionsB + b.comments.length) - (reactionsA + a.comments.length);
       });
+    } else {
+      // Relevancy sort for "all" feed: same department, matched interests keywords first
+      const dept = currentUser?.department || "";
+      const interests = currentUser?.interests || [];
+      
+      list.sort((a, b) => {
+        let scoreA = 0;
+        let scoreB = 0;
+        
+        const authorA = users.find((u) => u.id === a.authorId);
+        const authorB = users.find((u) => u.id === b.authorId);
+        
+        if (authorA && authorA.department === dept) scoreA += 3;
+        if (authorB && authorB.department === dept) scoreB += 3;
+        
+        // Matched interests
+        interests.forEach((interest) => {
+          if (a.content.toLowerCase().includes(interest.toLowerCase())) scoreA += 1;
+          if (b.content.toLowerCase().includes(interest.toLowerCase())) scoreB += 1;
+        });
+        
+        // Recency sorting secondary
+        const timeDiff = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        
+        return (scoreB - scoreA) || timeDiff;
+      });
     }
 
     return list;

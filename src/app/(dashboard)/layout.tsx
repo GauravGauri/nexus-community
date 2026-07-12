@@ -31,7 +31,10 @@ import {
   Check,
   Send,
   Building,
-  Award
+  Award,
+  Briefcase,
+  Layers,
+  Bookmark
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -47,7 +50,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     notifications,
     markNotificationRead,
     markAllNotificationsRead,
-    orgs
+    orgs,
+    users,
+    communities,
+    events,
+    qaQuestions,
+    announcements
   } = useStore();
 
   // Navigation states
@@ -65,19 +73,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ]);
   const [aiTyping, setAiTyping] = useState(false);
 
-  // Redirect if logged out (Auth Guard)
+  // Redirect if logged out or onboarding uncompleted
   useEffect(() => {
     if (!currentUser) {
       router.push("/login");
+    } else if (!currentUser.profileCompleted) {
+      router.push("/onboarding");
     }
   }, [currentUser, router]);
 
-  if (!currentUser) {
+  if (!currentUser || !currentUser.profileCompleted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
-          <p className="text-sm text-muted-foreground font-medium">Securing session...</p>
+          <p className="text-sm text-muted-foreground font-medium">Securing workspace session...</p>
         </div>
       </div>
     );
@@ -88,14 +98,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Nav Items configuration
   const primaryNav = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Feed", href: "/feed", icon: Rss },
+    { name: "Home", href: "/dashboard", icon: LayoutDashboard },
     { name: "Communities", href: "/communities", icon: Users },
-    { name: "Group Chat", href: "/chat", icon: MessageSquare },
-    { name: "Q&A Board", href: "/qa", icon: HelpCircle },
+    { name: "My Department", href: "/department", icon: Building },
+    { name: "Events", href: "/events", icon: Calendar },
+    { name: "Questions", href: "/qa", icon: HelpCircle },
     { name: "Polls", href: "/polls", icon: BarChart3 },
-    { name: "Events Calendar", href: "/events", icon: Calendar },
-    { name: "Announcements", href: "/announcements", icon: Megaphone },
+    { name: "Resources", href: "/resources", icon: Layers },
+    { name: "Jobs", href: "/jobs", icon: Briefcase },
+    { name: "Messages", href: "/chat", icon: MessageSquare },
+    { name: "Bookmarks", href: "/feed?tab=bookmarks", icon: Bookmark },
+    { name: "Leaderboard", href: "/dashboard?tab=leaderboard", icon: Award },
+    { name: "Profile", href: `/profile/${currentUser.id}`, icon: UserIcon },
+    { name: "Settings", href: "/settings", icon: Settings },
   ];
 
   const adminNav = [];
@@ -144,6 +159,52 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       setAiChat((prev) => [...prev, { sender: "ai", text: reply }]);
     }, 1200);
   };
+
+  // Right Sidebar calculations
+  const hideRightSidebarPaths = ["/chat", "/settings", "/onboarding", "/verify-org", "/login", "/signup"];
+  const showRightSidebar = !hideRightSidebarPaths.includes(pathname);
+
+  // 1. Suggested Connections
+  const suggestedPeople = users
+    .filter((u) => u.id !== currentUser.id)
+    .sort((a, b) => {
+      // Prioritize same department
+      const aDept = a.department === currentUser.department ? 1 : 0;
+      const bDept = b.department === currentUser.department ? 1 : 0;
+      return bDept - aDept;
+    })
+    .slice(0, 3);
+
+  const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
+  const toggleConnect = (userId: string) => {
+    setConnectedUsers((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+    );
+  };
+
+  // 2. Trending Communities
+  const trendingCommunities = [...communities]
+    .sort((a, b) => b.memberCount - a.memberCount)
+    .slice(0, 3);
+
+  // 3. Upcoming Events
+  const upcomingEventsList = [...events]
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 2);
+
+  // 4. Popular Questions
+  const popularQuestions = [...qaQuestions]
+    .sort((a, b) => b.votes - a.votes)
+    .slice(0, 2);
+
+  // 5. Top Contributors
+  const topContributors = [...users]
+    .sort((a, b) => b.reputation - a.reputation)
+    .slice(0, 3);
+
+  // 6. Recent Announcements
+  const recentAnnouncements = [...announcements]
+    .slice(0, 2);
 
   return (
     <div className="min-h-screen flex bg-background text-foreground transition-colors duration-300">
@@ -579,9 +640,144 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* WORKSPACE PAGES WRAPPER */}
-        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto overflow-y-auto">
-          {children}
-        </main>
+        {showRightSidebar ? (
+          <div className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto overflow-y-auto grid grid-cols-1 xl:grid-cols-12 gap-8">
+            {/* Middle main content */}
+            <div className="xl:col-span-8 space-y-6">
+              {children}
+            </div>
+
+            {/* Right sidebar column */}
+            <aside className="hidden xl:flex xl:col-span-4 flex-col space-y-6">
+              {/* Widget 1: Suggested Connections */}
+              <div className="p-5 rounded-2xl border border-border/40 bg-card/65 backdrop-blur-md space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Suggested Connections</h4>
+                <div className="space-y-3.5">
+                  {suggestedPeople.map((u) => {
+                    const isConnected = connectedUsers.includes(u.id);
+                    return (
+                      <div key={u.id} className="flex items-center justify-between gap-3 text-xs">
+                        <div className="flex items-center space-x-2.5 min-w-0">
+                          <img src={u.avatar} alt="" className="w-8.5 h-8.5 rounded-xl object-cover border border-border/20" />
+                          <div className="min-w-0">
+                            <Link href={`/profile/${u.id}`} className="font-bold text-foreground hover:text-primary hover:underline truncate block">
+                              {u.name}
+                            </Link>
+                            <p className="text-[10px] text-muted-foreground truncate">{u.title}</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant={isConnected ? "outline" : "primary"}
+                          size="sm"
+                          className="text-[9px] !py-1 !px-2 rounded-lg cursor-pointer"
+                          onClick={() => toggleConnect(u.id)}
+                        >
+                          {isConnected ? "Connected" : "+ Connect"}
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Widget 2: Trending Communities */}
+              <div className="p-5 rounded-2xl border border-border/40 bg-card/65 backdrop-blur-md space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Trending Communities</h4>
+                <div className="space-y-3">
+                  {trendingCommunities.map((c) => (
+                    <div key={c.id} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xl p-1 bg-secondary/80 rounded-lg">{c.logo}</span>
+                        <div>
+                          <p className="font-bold text-foreground truncate max-w-[120px]">{c.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{c.memberCount} members</p>
+                        </div>
+                      </div>
+                      <Link href="/communities">
+                        <Button variant="secondary" size="sm" className="text-[9px] !py-1 !px-2.5 rounded-lg">View</Button>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Widget 3: Upcoming Events */}
+              <div className="p-5 rounded-2xl border border-border/40 bg-card/65 backdrop-blur-md space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Upcoming Events</h4>
+                <div className="space-y-3">
+                  {upcomingEventsList.map((e) => (
+                    <div key={e.id} className="text-xs border-l-2 border-primary/50 pl-3 py-0.5 space-y-1">
+                      <Link href="/events" className="font-bold text-foreground hover:text-primary transition-colors line-clamp-1">
+                        {e.title}
+                      </Link>
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span>{new Date(e.date).toLocaleDateString(undefined, {month: 'short', day: 'numeric'})} at {e.time}</span>
+                        <span className="truncate max-w-[80px]">{e.location}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Widget 4: Popular Questions */}
+              <div className="p-5 rounded-2xl border border-border/40 bg-card/65 backdrop-blur-md space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Popular Questions</h4>
+                <div className="space-y-3">
+                  {popularQuestions.map((q) => (
+                    <div key={q.id} className="text-xs space-y-1">
+                      <Link href="/qa" className="font-bold text-foreground hover:text-primary transition-colors line-clamp-2 leading-snug">
+                        {q.title}
+                      </Link>
+                      <p className="text-[10px] text-muted-foreground font-semibold flex items-center gap-1">
+                        🔥 {q.votes} votes • {q.answersCount} answers
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Widget 5: Top Contributors */}
+              <div className="p-5 rounded-2xl border border-border/40 bg-card/65 backdrop-blur-md space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Top Contributors</h4>
+                <div className="space-y-3.5">
+                  {topContributors.map((u) => (
+                    <div key={u.id} className="flex items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <img src={u.avatar} alt="" className="w-8 h-8 rounded-lg object-cover border border-border/10" />
+                        <div className="min-w-0">
+                          <Link href={`/profile/${u.id}`} className="font-bold text-foreground hover:text-primary truncate block">
+                            {u.name}
+                          </Link>
+                          <p className="text-[9px] text-muted-foreground truncate">{u.title}</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-amber-500 bg-amber-500/5 px-2 py-0.5 rounded-md border border-amber-500/10">
+                        {u.reputation} Rep
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Widget 6: Recent Pinned Announcements */}
+              <div className="p-5 rounded-2xl border border-border/40 bg-card/65 backdrop-blur-md space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Announcements</h4>
+                <div className="space-y-3">
+                  {recentAnnouncements.map((a) => (
+                    <div key={a.id} className="p-3 bg-secondary/30 border border-border/20 rounded-xl space-y-1.5 text-xs">
+                      <p className="font-bold text-foreground">{a.title}</p>
+                      <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">{a.content}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </aside>
+          </div>
+        ) : (
+          <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto overflow-y-auto">
+            {children}
+          </main>
+        )}
       </div>
 
       {/* 4. AI ASSISTANT DRAWER PANEL */}

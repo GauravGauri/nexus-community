@@ -23,6 +23,7 @@ export interface User {
   username: string;
   email: string;
   avatar: string;
+  coverPhoto?: string;
   role: "admin" | "moderator" | "member";
   org: Organization | null;
   verificationStatus: "unverified" | "pending" | "verified";
@@ -36,6 +37,46 @@ export interface User {
   joinedAt: string;
   bio: string;
   title: string;
+  
+  // Onboarding & Selection System
+  profileCompleted: boolean;
+  orgType: "college" | "university" | "company" | "school" | "startup" | "government" | null;
+  department: string;
+  interests: string[];
+  skills: string[];
+  experienceLevel?: string;
+  currentYearSemester?: string;
+  location?: string;
+  website?: string;
+  github?: string;
+  linkedin?: string;
+  portfolio?: string;
+}
+
+export interface Job {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  type: "Full-time" | "Internship" | "Contract";
+  description: string;
+  salary: string;
+  createdAt: string;
+  authorId: string;
+  tags: string[];
+}
+
+export interface Resource {
+  id: string;
+  title: string;
+  category: "Slides" | "Video" | "Document" | "Link";
+  url: string;
+  description: string;
+  downloadsCount: number;
+  createdAt: string;
+  authorId: string;
+  department: string;
+  tags: string[];
 }
 
 export interface Community {
@@ -255,6 +296,16 @@ export const mockUsers: User[] = [
     joinedAt: "2026-01-10",
     bio: "Computer Science senior. React enthusiast, keyboard builders collector. Let's build something epic!",
     title: "CS Undergrad @ Nexus Univ",
+    profileCompleted: true,
+    orgType: "university",
+    department: "Computer Science (CSE)",
+    interests: ["React", "Next.js", "AI", "Figma", "Hackathons", "Competitive Programming"],
+    skills: ["React", "TypeScript", "Next.js", "Zustand", "Tailwind CSS"],
+    experienceLevel: "Intermediate",
+    currentYearSemester: "4th Year / 7th Semester",
+    location: "San Francisco, CA",
+    github: "github.com/leosterling",
+    linkedin: "linkedin.com/in/leosterling",
   },
   {
     id: "user-sarah",
@@ -270,6 +321,15 @@ export const mockUsers: User[] = [
     joinedAt: "2025-05-12",
     bio: "Nexus Campus Community Admin. Reach out for partnership inquiries or verification audits.",
     title: "Community Director @ Nexus Univ",
+    profileCompleted: true,
+    orgType: "university",
+    department: "Management",
+    interests: ["Management", "Finance", "HR", "Investing", "Startups"],
+    skills: ["Leadership", "Public Speaking", "Community Operations", "Management"],
+    experienceLevel: "Senior",
+    currentYearSemester: "N/A",
+    location: "New York, NY",
+    linkedin: "linkedin.com/in/sarahjenkins",
   },
   {
     id: "user-alex",
@@ -285,6 +345,16 @@ export const mockUsers: User[] = [
     joinedAt: "2025-09-18",
     bio: "Engineering Lead @ Vercel Labs. Open Source enthusiast. Moderator for design and coding sections.",
     title: "Lead Engineer @ Vercel Labs",
+    profileCompleted: true,
+    orgType: "company",
+    department: "Engineering",
+    interests: ["DevOps", "AI", "Cloud", "AWS", "Machine Learning", "Open Source"],
+    skills: ["Rust", "Docker", "Kubernetes", "AWS", "CI/CD", "Next.js"],
+    experienceLevel: "Senior",
+    currentYearSemester: "N/A",
+    location: "Remote",
+    github: "github.com/alexrivera",
+    linkedin: "linkedin.com/in/alexrivera",
   },
   {
     id: "user-elena",
@@ -300,6 +370,16 @@ export const mockUsers: User[] = [
     joinedAt: "2026-02-14",
     bio: "Product Designer. Obsessed with clean UI, micro-interactions, and glassmorphism layouts. Tailwind advocate.",
     title: "UI Designer @ Vercel",
+    profileCompleted: true,
+    orgType: "company",
+    department: "Design",
+    interests: ["UI Design", "UX Design", "Figma", "React", "Framer Motion"],
+    skills: ["Figma", "UI Design", "CSS Glassmorphism", "Prototyping", "Design Systems"],
+    experienceLevel: "Mid-Level",
+    currentYearSemester: "N/A",
+    location: "Remote",
+    portfolio: "elenavance.design",
+    linkedin: "linkedin.com/in/elenavance",
   },
   {
     id: "user-liam",
@@ -308,13 +388,21 @@ export const mockUsers: User[] = [
     email: "liam.carter@nexus.edu",
     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=faces",
     role: "member",
-    org: null, // Unverified at start for demo onboarding
+    org: null,
     verificationStatus: "unverified",
     reputation: 0,
     badges: [],
     joinedAt: "2026-07-01",
     bio: "New student on campus looking to connect with clubs and get verified.",
     title: "Freshman @ Nexus Univ",
+    profileCompleted: false,
+    orgType: null,
+    department: "",
+    interests: [],
+    skills: [],
+    experienceLevel: "",
+    currentYearSemester: "",
+    location: "",
   },
 ];
 
@@ -647,6 +735,86 @@ export const mockFlagged: FlaggedContent[] = [
   },
 ];
 
+// Seed Jobs
+export const mockJobs: Job[] = [
+  {
+    id: "job-1",
+    title: "Frontend Developer Intern",
+    company: "Vercel Labs",
+    location: "Remote (US/Canada)",
+    type: "Internship",
+    description: "Looking for a passionate junior frontend engineering intern with hands-on experience in React 19, Next.js 15, and Tailwind CSS. You will work directly on optimizing dashboard components and micro-interactions.",
+    salary: "$35 - $45 / hour",
+    createdAt: "2026-07-10T09:00:00Z",
+    authorId: "user-alex",
+    tags: ["React", "Next.js", "Tailwind CSS", "TypeScript"],
+  },
+  {
+    id: "job-2",
+    title: "AI Research Associate",
+    company: "Nexus AI Labs",
+    location: "San Francisco, CA (Hybrid)",
+    type: "Full-time",
+    description: "Join our core research team developing autonomous agent workflows and local browser automation pipelines. Expertise in Python, PyTorch, LLM fine-tuning, and vector database systems is required.",
+    salary: "$130k - $160k",
+    createdAt: "2026-07-11T10:00:00Z",
+    authorId: "user-alex",
+    tags: ["Artificial Intelligence", "Machine Learning", "Python", "LLMs"],
+  },
+  {
+    id: "job-3",
+    title: "UI/UX Product Designer",
+    company: "Figma Community",
+    location: "Remote (Worldwide)",
+    type: "Full-time",
+    description: "We are seeking a mid-to-senior product designer to work on advanced UI component library presets and CSS-first design system bridges. Must be an expert in Figma auto-layouts, custom animations, and responsive structures.",
+    salary: "$110k - $140k",
+    createdAt: "2026-07-12T08:00:00Z",
+    authorId: "user-elena",
+    tags: ["Figma", "UI Design", "UX Design", "Design Systems"],
+  },
+];
+
+// Seed Resources
+export const mockResources: Resource[] = [
+  {
+    id: "res-1",
+    title: "Next.js 15 App Router Architecture & Best Practices",
+    category: "Slides",
+    url: "https://nextjs.org/docs",
+    description: "Slide deck compiling production-level design patterns for Next.js 15, including route handlers, parallel routing, custom suspense borders, and React 19 ref forwarding structures.",
+    downloadsCount: 145,
+    createdAt: "2026-07-10T14:00:00Z",
+    authorId: "user-alex",
+    department: "Computer Science (CSE)",
+    tags: ["nextjs-15", "react-19", "architecture"],
+  },
+  {
+    id: "res-2",
+    title: "Tailwind CSS v4 CSS-First Configuration Guide",
+    category: "Document",
+    url: "https://tailwindcss.com/docs/v4-beta",
+    description: "Official guide on migrating design tokens to Tailwind v4. Covers `@theme` variables, performance compilation advantages, CSS configurations, and removal of tailwind.config.js.",
+    downloadsCount: 98,
+    createdAt: "2026-07-11T12:00:00Z",
+    authorId: "user-elena",
+    department: "Computer Science (CSE)",
+    tags: ["tailwindcss-v4", "css-variables", "design-systems"],
+  },
+  {
+    id: "res-3",
+    title: "Advanced Autolayout V5 & Scalable Figma Systems",
+    category: "Video",
+    url: "https://figma.com/education",
+    description: "45-minute video tutorial covering advanced auto-layout parameters, responsive flex matrices in Figma, variable themes, and hands-on portfolio prototype reviews.",
+    downloadsCount: 210,
+    createdAt: "2026-07-12T05:00:00Z",
+    authorId: "user-elena",
+    department: "Design",
+    tags: ["figma", "ui-ux", "prototyping"],
+  },
+];
+
 // Helper database manager wrapper to mimic client-server database persistence
 export class MockDatabaseService {
   private static KEY = "nexus_community_db";
@@ -686,6 +854,8 @@ export class MockDatabaseService {
       mentorship: mockMentorship,
       lostAndFound: mockLostAndFound,
       flagged: mockFlagged,
+      jobs: mockJobs,
+      resources: mockResources,
     };
   }
 

@@ -19,7 +19,9 @@ import {
   LostAndFoundItem,
   Comment,
   mockBadges,
-  mockOrgs
+  mockOrgs,
+  Job,
+  Resource
 } from "@/services/mockDb";
 
 interface StoreState {
@@ -39,6 +41,8 @@ interface StoreState {
   lostAndFound: LostAndFoundItem[];
   flagged: FlaggedContent[];
   notifications: Notification[];
+  jobs: Job[];
+  resources: Resource[];
   
   // Active Navigation/UI state
   currentUser: User | null;
@@ -50,6 +54,24 @@ interface StoreState {
   logout: () => void;
   updateProfile: (profile: Partial<User>) => void;
   verifyOrg: (details: { type: "id_card" | "invite_code" | "email_otp"; value: string; fileUrl?: string }) => void;
+  
+  // Onboarding action
+  completeOnboarding: (data: {
+    orgType: User["orgType"];
+    department: string;
+    interests: string[];
+    bio: string;
+    skills: string[];
+    experienceLevel: string;
+    currentYearSemester: string;
+    location: string;
+    website?: string;
+    github?: string;
+    linkedin?: string;
+    portfolio?: string;
+    avatar?: string;
+    coverPhoto?: string;
+  }) => void;
   
   // Post/Feed actions
   createPost: (content: string, communityId?: string, mediaUrl?: string) => void;
@@ -97,6 +119,8 @@ interface StoreState {
   addMarketplaceItem: (title: string, description: string, price: number, image: string, category: MarketplaceItem["category"], contact: string) => void;
   addMentorshipListing: (title: string, role: string, companyOrSchool: string, description: string, skills: string[]) => void;
   addLostAndFoundItem: (title: string, description: string, location: string, status: "lost" | "found", image?: string) => void;
+  createJob: (jobData: Omit<Job, "id" | "createdAt" | "authorId">) => void;
+  postResource: (resData: Omit<Resource, "id" | "downloadsCount" | "createdAt" | "authorId">) => void;
 }
 
 export const useStore = create<StoreState>((set, get) => {
@@ -194,6 +218,110 @@ export const useStore = create<StoreState>((set, get) => {
       const updatedUsers = users.map((u) => (u.id === currentUser.id ? updatedUser : u));
       set({ currentUser: updatedUser, users: updatedUsers });
       syncDb({ users: updatedUsers });
+    },
+
+    completeOnboarding: (data) => {
+      const { currentUser, users, communities } = get();
+      if (!currentUser) return;
+
+      // Identify matching communities to join
+      const communitiesToJoin: string[] = [];
+      const deptLower = data.department.toLowerCase();
+
+      if (deptLower.includes("computer") || deptLower.includes("science") || deptLower.includes("cse") || deptLower.includes("coding")) {
+        communitiesToJoin.push("comm-dev", "comm-ai");
+      } else if (deptLower.includes("design") || deptLower.includes("ux") || deptLower.includes("ui")) {
+        communitiesToJoin.push("comm-design");
+      } else if (deptLower.includes("game") || deptLower.includes("gaming") || deptLower.includes("esports")) {
+        communitiesToJoin.push("comm-gaming");
+      }
+
+      // Automatically create a department-specific community if it doesn't exist
+      const deptCommunityName = `${data.department} Community`;
+      let deptComm = communities.find((c) => c.name.toLowerCase() === deptCommunityName.toLowerCase());
+      let updatedComms = [...communities];
+
+      if (!deptComm) {
+        deptComm = {
+          id: `comm-dept-${Date.now()}`,
+          name: deptCommunityName,
+          description: `The official hub for the ${data.department} department. Share lecture slides, study plans, or job openings.`,
+          category: "study",
+          memberCount: 1,
+          members: [currentUser.id],
+          logo: "🏛️",
+          isPrivate: false,
+          createdBy: "system",
+        };
+        updatedComms.push(deptComm);
+      } else {
+        if (!deptComm.members.includes(currentUser.id)) {
+          updatedComms = communities.map((c) => {
+            if (c.id === deptComm!.id) {
+              return { ...c, members: [...c.members, currentUser.id], memberCount: c.memberCount + 1 };
+            }
+            return c;
+          });
+        }
+      }
+
+      // Auto-join matching category communities
+      updatedComms = updatedComms.map((c) => {
+        if (communitiesToJoin.includes(c.id) && !c.members.includes(currentUser.id)) {
+          return { ...c, members: [...c.members, currentUser.id], memberCount: c.memberCount + 1 };
+        }
+        return c;
+      });
+
+      const updatedUser: User = {
+        ...currentUser,
+        ...data,
+        profileCompleted: true,
+        reputation: currentUser.reputation + 15, // +15 Reputation for profile completion milestone
+      };
+
+      const updatedUsers = users.map((u) => (u.id === currentUser.id ? updatedUser : u));
+
+      set({
+        currentUser: updatedUser,
+        users: updatedUsers,
+        communities: updatedComms,
+      });
+
+      syncDb({ users: updatedUsers, communities: updatedComms });
+    },
+
+    createJob: (jobData) => {
+      const { jobs, currentUser } = get();
+      if (!currentUser) return;
+
+      const newJob: Job = {
+        ...jobData,
+        id: `job-${Date.now()}`,
+        createdAt: new Date().toISOString(),
+        authorId: currentUser.id,
+      };
+
+      const updatedJobs = [newJob, ...jobs];
+      set({ jobs: updatedJobs });
+      syncDb({ jobs: updatedJobs });
+    },
+
+    postResource: (resData) => {
+      const { resources, currentUser } = get();
+      if (!currentUser) return;
+
+      const newResource: Resource = {
+        ...resData,
+        id: `res-${Date.now()}`,
+        downloadsCount: 0,
+        createdAt: new Date().toISOString(),
+        authorId: currentUser.id,
+      };
+
+      const updatedResources = [newResource, ...resources];
+      set({ resources: updatedResources });
+      syncDb({ resources: updatedResources });
     },
 
     createPost: (content, communityId, mediaUrl) => {
