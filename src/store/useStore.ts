@@ -52,6 +52,7 @@ interface StoreState {
   // Actions
   login: (username: string) => boolean;
   logout: () => void;
+  register: (name: string, username: string, email: string, interests: string[]) => void;
   updateProfile: (profile: Partial<User>) => void;
   verifyOrg: (details: { type: "id_card" | "invite_code" | "email_otp"; value: string; fileUrl?: string }) => void;
   
@@ -180,6 +181,35 @@ export const useStore = create<StoreState>((set, get) => {
 
     logout: () => {
       set({ currentUser: null, activeThreadId: null, activeCommunityId: null });
+    },
+
+    register: (name, username, email, interests) => {
+      const { users } = get();
+
+      const newUser: User = {
+        id: `user-${Date.now()}`,
+        name,
+        username,
+        email,
+        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop",
+        role: "member",
+        org: null,
+        verificationStatus: "unverified",
+        reputation: 0,
+        badges: [],
+        joinedAt: new Date().toISOString().split("T")[0],
+        bio: "",
+        title: "Member",
+        profileCompleted: false,
+        orgType: null,
+        department: "",
+        interests,
+        skills: [],
+      };
+
+      const updatedUsers = [...users, newUser];
+      set({ users: updatedUsers, currentUser: newUser });
+      syncDb({ users: updatedUsers });
     },
 
     updateProfile: (profile: Partial<User>) => {

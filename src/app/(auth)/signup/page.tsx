@@ -22,7 +22,7 @@ const AVAILABLE_INTERESTS = [
 
 export default function SignupPage() {
   const router = useRouter();
-  const login = useStore((state) => state.login);
+  const register = useStore((state) => state.register);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: "",
@@ -78,8 +78,7 @@ export default function SignupPage() {
     // Simulate user creation and auto-login
     setTimeout(() => {
       setLoading(false);
-      // Log in as standard user "leosterling" for preview purposes
-      login("leosterling");
+      register(formData.name, formData.username, formData.email, selectedInterests);
       router.push("/verify-org"); // Prompt user to verify organization immediately after signup
     }, 1000);
   };
